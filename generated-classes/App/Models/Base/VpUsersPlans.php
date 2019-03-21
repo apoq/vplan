@@ -64,13 +64,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     protected $virtualColumns = array();
 
     /**
-     * The value for the id field.
-     *
-     * @var        string
-     */
-    protected $id;
-
-    /**
      * The value for the user_id field.
      *
      * @var        int
@@ -328,16 +321,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     }
 
     /**
-     * Get the [id] column value.
-     *
-     * @return string
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
      * Get the [user_id] column value.
      *
      * @return int
@@ -356,26 +339,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     {
         return $this->plan_id;
     }
-
-    /**
-     * Set the value of [id] column.
-     *
-     * @param string $v new value
-     * @return $this|\App\Models\VpUsersPlans The current object (for fluent API support)
-     */
-    public function setId($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->id !== $v) {
-            $this->id = $v;
-            $this->modifiedColumns[VpUsersPlansTableMap::COL_ID] = true;
-        }
-
-        return $this;
-    } // setId()
 
     /**
      * Set the value of [user_id] column.
@@ -461,13 +424,10 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : VpUsersPlansTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->id = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : VpUsersPlansTableMap::translateFieldName('UserId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : VpUsersPlansTableMap::translateFieldName('UserId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->user_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : VpUsersPlansTableMap::translateFieldName('PlanId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : VpUsersPlansTableMap::translateFieldName('PlanId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->plan_id = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
@@ -477,7 +437,7 @@ abstract class VpUsersPlans implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 3; // 3 = VpUsersPlansTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 2; // 2 = VpUsersPlansTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\App\\Models\\VpUsersPlans'), 0, $e);
@@ -699,15 +659,8 @@ abstract class VpUsersPlans implements ActiveRecordInterface
         $modifiedColumns = array();
         $index = 0;
 
-        $this->modifiedColumns[VpUsersPlansTableMap::COL_ID] = true;
-        if (null !== $this->id) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key (' . VpUsersPlansTableMap::COL_ID . ')');
-        }
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(VpUsersPlansTableMap::COL_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'id';
-        }
         if ($this->isColumnModified(VpUsersPlansTableMap::COL_USER_ID)) {
             $modifiedColumns[':p' . $index++]  = 'user_id';
         }
@@ -725,9 +678,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
             $stmt = $con->prepare($sql);
             foreach ($modifiedColumns as $identifier => $columnName) {
                 switch ($columnName) {
-                    case 'id':
-                        $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
-                        break;
                     case 'user_id':
                         $stmt->bindValue($identifier, $this->user_id, PDO::PARAM_INT);
                         break;
@@ -741,13 +691,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
             Propel::log($e->getMessage(), Propel::LOG_ERR);
             throw new PropelException(sprintf('Unable to execute INSERT statement [%s]', $sql), 0, $e);
         }
-
-        try {
-            $pk = $con->lastInsertId();
-        } catch (Exception $e) {
-            throw new PropelException('Unable to get autoincrement id.', 0, $e);
-        }
-        $this->setId($pk);
 
         $this->setNew(false);
     }
@@ -797,12 +740,9 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     {
         switch ($pos) {
             case 0:
-                return $this->getId();
-                break;
-            case 1:
                 return $this->getUserId();
                 break;
-            case 2:
+            case 1:
                 return $this->getPlanId();
                 break;
             default:
@@ -835,9 +775,8 @@ abstract class VpUsersPlans implements ActiveRecordInterface
         $alreadyDumpedObjects['VpUsersPlans'][$this->hashCode()] = true;
         $keys = VpUsersPlansTableMap::getFieldNames($keyType);
         $result = array(
-            $keys[0] => $this->getId(),
-            $keys[1] => $this->getUserId(),
-            $keys[2] => $this->getPlanId(),
+            $keys[0] => $this->getUserId(),
+            $keys[1] => $this->getPlanId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -910,12 +849,9 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     {
         switch ($pos) {
             case 0:
-                $this->setId($value);
-                break;
-            case 1:
                 $this->setUserId($value);
                 break;
-            case 2:
+            case 1:
                 $this->setPlanId($value);
                 break;
         } // switch()
@@ -945,13 +881,10 @@ abstract class VpUsersPlans implements ActiveRecordInterface
         $keys = VpUsersPlansTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
-            $this->setId($arr[$keys[0]]);
+            $this->setUserId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setUserId($arr[$keys[1]]);
-        }
-        if (array_key_exists($keys[2], $arr)) {
-            $this->setPlanId($arr[$keys[2]]);
+            $this->setPlanId($arr[$keys[1]]);
         }
     }
 
@@ -994,9 +927,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     {
         $criteria = new Criteria(VpUsersPlansTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(VpUsersPlansTableMap::COL_ID)) {
-            $criteria->add(VpUsersPlansTableMap::COL_ID, $this->id);
-        }
         if ($this->isColumnModified(VpUsersPlansTableMap::COL_USER_ID)) {
             $criteria->add(VpUsersPlansTableMap::COL_USER_ID, $this->user_id);
         }
@@ -1020,7 +950,8 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     public function buildPkeyCriteria()
     {
         $criteria = ChildVpUsersPlansQuery::create();
-        $criteria->add(VpUsersPlansTableMap::COL_ID, $this->id);
+        $criteria->add(VpUsersPlansTableMap::COL_USER_ID, $this->user_id);
+        $criteria->add(VpUsersPlansTableMap::COL_PLAN_ID, $this->plan_id);
 
         return $criteria;
     }
@@ -1033,10 +964,25 @@ abstract class VpUsersPlans implements ActiveRecordInterface
      */
     public function hashCode()
     {
-        $validPk = null !== $this->getId();
+        $validPk = null !== $this->getUserId() &&
+            null !== $this->getPlanId();
 
-        $validPrimaryKeyFKs = 0;
+        $validPrimaryKeyFKs = 2;
         $primaryKeyFKs = [];
+
+        //relation vp_users_plans_ibfk_1 to table vp_users
+        if ($this->aVpUsers && $hash = spl_object_hash($this->aVpUsers)) {
+            $primaryKeyFKs[] = $hash;
+        } else {
+            $validPrimaryKeyFKs = false;
+        }
+
+        //relation vp_users_plans_ibfk_2 to table vp_plans
+        if ($this->aVpPlans && $hash = spl_object_hash($this->aVpPlans)) {
+            $primaryKeyFKs[] = $hash;
+        } else {
+            $validPrimaryKeyFKs = false;
+        }
 
         if ($validPk) {
             return crc32(json_encode($this->getPrimaryKey(), JSON_UNESCAPED_UNICODE));
@@ -1048,23 +994,29 @@ abstract class VpUsersPlans implements ActiveRecordInterface
     }
 
     /**
-     * Returns the primary key for this object (row).
-     * @return string
+     * Returns the composite primary key for this object.
+     * The array elements will be in same order as specified in XML.
+     * @return array
      */
     public function getPrimaryKey()
     {
-        return $this->getId();
+        $pks = array();
+        $pks[0] = $this->getUserId();
+        $pks[1] = $this->getPlanId();
+
+        return $pks;
     }
 
     /**
-     * Generic method to set the primary key (id column).
+     * Set the [composite] primary key.
      *
-     * @param       string $key Primary key.
+     * @param      array $keys The elements of the composite key (order must match the order in XML file).
      * @return void
      */
-    public function setPrimaryKey($key)
+    public function setPrimaryKey($keys)
     {
-        $this->setId($key);
+        $this->setUserId($keys[0]);
+        $this->setPlanId($keys[1]);
     }
 
     /**
@@ -1073,7 +1025,7 @@ abstract class VpUsersPlans implements ActiveRecordInterface
      */
     public function isPrimaryKeyNull()
     {
-        return null === $this->getId();
+        return (null === $this->getUserId()) && (null === $this->getPlanId());
     }
 
     /**
@@ -1093,7 +1045,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
         $copyObj->setPlanId($this->getPlanId());
         if ($makeNew) {
             $copyObj->setNew(true);
-            $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
         }
     }
 
@@ -1234,7 +1185,6 @@ abstract class VpUsersPlans implements ActiveRecordInterface
         if (null !== $this->aVpPlans) {
             $this->aVpPlans->removeVpUsersPlans($this);
         }
-        $this->id = null;
         $this->user_id = null;
         $this->plan_id = null;
         $this->alreadyInSave = false;

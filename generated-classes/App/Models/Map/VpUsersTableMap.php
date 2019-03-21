@@ -159,6 +159,7 @@ class VpUsersTableMap extends TableMap
     1 => ':id',
   ),
 ), 'CASCADE', 'CASCADE', 'VpUsersPlanss', false);
+        $this->addRelation('VpPlans', '\\App\\Models\\VpPlans', RelationMap::MANY_TO_MANY, array(), 'CASCADE', 'CASCADE', 'VpPlanss');
     } // buildRelations()
     /**
      * Method to invalidate the instance pool of all tables related to vp_users     * by a foreign key with ON DELETE CASCADE

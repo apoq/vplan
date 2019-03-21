@@ -6,3 +6,4 @@ ehthumbs.db
 .idea/vcs.xml
 vendor
 cache/views/*
+generated-conf/*

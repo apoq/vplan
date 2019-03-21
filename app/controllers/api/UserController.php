@@ -23,6 +23,9 @@ class UserController extends BaseController
         $this->renderJson($users->toArray());
     }
 
+    /**
+     * GET /api/v1/users/{id}
+     */
     public function view($id)
     {
         $user = VpUsersQuery::create()->findPk($id);
@@ -72,9 +75,6 @@ class UserController extends BaseController
 
     /**
      * PUT /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
      */
     public function update($id)
     {
@@ -111,9 +111,6 @@ class UserController extends BaseController
 
     /**
      * DELETE /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
      */
     public function delete($id)
     {

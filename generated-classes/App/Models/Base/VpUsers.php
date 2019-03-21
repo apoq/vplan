@@ -4,6 +4,8 @@ namespace App\Models\Base;
 
 use \Exception;
 use \PDO;
+use App\Models\VpPlans as ChildVpPlans;
+use App\Models\VpPlansQuery as ChildVpPlansQuery;
 use App\Models\VpUsers as ChildVpUsers;
 use App\Models\VpUsersPlans as ChildVpUsersPlans;
 use App\Models\VpUsersPlansQuery as ChildVpUsersPlansQuery;
@@ -99,12 +101,28 @@ abstract class VpUsers implements ActiveRecordInterface
     protected $collVpUsersPlanssPartial;
 
     /**
+     * @var        ObjectCollection|ChildVpPlans[] Cross Collection to store aggregation of ChildVpPlans objects.
+     */
+    protected $collVpPlanss;
+
+    /**
+     * @var bool
+     */
+    protected $collVpPlanssPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
      * @var boolean
      */
     protected $alreadyInSave = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildVpPlans[]
+     */
+    protected $vpPlanssScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -575,6 +593,7 @@ abstract class VpUsers implements ActiveRecordInterface
 
             $this->collVpUsersPlanss = null;
 
+            $this->collVpPlanss = null;
         } // if (deep)
     }
 
@@ -688,6 +707,35 @@ abstract class VpUsers implements ActiveRecordInterface
                 }
                 $this->resetModified();
             }
+
+            if ($this->vpPlanssScheduledForDeletion !== null) {
+                if (!$this->vpPlanssScheduledForDeletion->isEmpty()) {
+                    $pks = array();
+                    foreach ($this->vpPlanssScheduledForDeletion as $entry) {
+                        $entryPk = [];
+
+                        $entryPk[0] = $this->getId();
+                        $entryPk[1] = $entry->getId();
+                        $pks[] = $entryPk;
+                    }
+
+                    \App\Models\VpUsersPlansQuery::create()
+                        ->filterByPrimaryKeys($pks)
+                        ->delete($con);
+
+                    $this->vpPlanssScheduledForDeletion = null;
+                }
+
+            }
+
+            if ($this->collVpPlanss) {
+                foreach ($this->collVpPlanss as $vpPlans) {
+                    if (!$vpPlans->isDeleted() && ($vpPlans->isNew() || $vpPlans->isModified())) {
+                        $vpPlans->save($con);
+                    }
+                }
+            }
+
 
             if ($this->vpUsersPlanssScheduledForDeletion !== null) {
                 if (!$this->vpUsersPlanssScheduledForDeletion->isEmpty()) {
@@ -1302,7 +1350,10 @@ abstract class VpUsers implements ActiveRecordInterface
         $vpUsersPlanssToDelete = $this->getVpUsersPlanss(new Criteria(), $con)->diff($vpUsersPlanss);
 
 
-        $this->vpUsersPlanssScheduledForDeletion = $vpUsersPlanssToDelete;
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->vpUsersPlanssScheduledForDeletion = clone $vpUsersPlanssToDelete;
 
         foreach ($vpUsersPlanssToDelete as $vpUsersPlansRemoved) {
             $vpUsersPlansRemoved->setVpUsers(null);
@@ -1433,6 +1484,249 @@ abstract class VpUsers implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collVpPlanss collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addVpPlanss()
+     */
+    public function clearVpPlanss()
+    {
+        $this->collVpPlanss = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Initializes the collVpPlanss crossRef collection.
+     *
+     * By default this just sets the collVpPlanss collection to an empty collection (like clearVpPlanss());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @return void
+     */
+    public function initVpPlanss()
+    {
+        $collectionClassName = VpUsersPlansTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collVpPlanss = new $collectionClassName;
+        $this->collVpPlanssPartial = true;
+        $this->collVpPlanss->setModel('\App\Models\VpPlans');
+    }
+
+    /**
+     * Checks if the collVpPlanss collection is loaded.
+     *
+     * @return bool
+     */
+    public function isVpPlanssLoaded()
+    {
+        return null !== $this->collVpPlanss;
+    }
+
+    /**
+     * Gets a collection of ChildVpPlans objects related by a many-to-many relationship
+     * to the current object by way of the vp_users_plans cross-reference table.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildVpUsers is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria Optional query object to filter the query
+     * @param      ConnectionInterface $con Optional connection object
+     *
+     * @return ObjectCollection|ChildVpPlans[] List of ChildVpPlans objects
+     */
+    public function getVpPlanss(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collVpPlanssPartial && !$this->isNew();
+        if (null === $this->collVpPlanss || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collVpPlanss) {
+                    $this->initVpPlanss();
+                }
+            } else {
+
+                $query = ChildVpPlansQuery::create(null, $criteria)
+                    ->filterByVpUsers($this);
+                $collVpPlanss = $query->find($con);
+                if (null !== $criteria) {
+                    return $collVpPlanss;
+                }
+
+                if ($partial && $this->collVpPlanss) {
+                    //make sure that already added objects gets added to the list of the database.
+                    foreach ($this->collVpPlanss as $obj) {
+                        if (!$collVpPlanss->contains($obj)) {
+                            $collVpPlanss[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collVpPlanss = $collVpPlanss;
+                $this->collVpPlanssPartial = false;
+            }
+        }
+
+        return $this->collVpPlanss;
+    }
+
+    /**
+     * Sets a collection of VpPlans objects related by a many-to-many relationship
+     * to the current object by way of the vp_users_plans cross-reference table.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param  Collection $vpPlanss A Propel collection.
+     * @param  ConnectionInterface $con Optional connection object
+     * @return $this|ChildVpUsers The current object (for fluent API support)
+     */
+    public function setVpPlanss(Collection $vpPlanss, ConnectionInterface $con = null)
+    {
+        $this->clearVpPlanss();
+        $currentVpPlanss = $this->getVpPlanss();
+
+        $vpPlanssScheduledForDeletion = $currentVpPlanss->diff($vpPlanss);
+
+        foreach ($vpPlanssScheduledForDeletion as $toDelete) {
+            $this->removeVpPlans($toDelete);
+        }
+
+        foreach ($vpPlanss as $vpPlans) {
+            if (!$currentVpPlanss->contains($vpPlans)) {
+                $this->doAddVpPlans($vpPlans);
+            }
+        }
+
+        $this->collVpPlanssPartial = false;
+        $this->collVpPlanss = $vpPlanss;
+
+        return $this;
+    }
+
+    /**
+     * Gets the number of VpPlans objects related by a many-to-many relationship
+     * to the current object by way of the vp_users_plans cross-reference table.
+     *
+     * @param      Criteria $criteria Optional query object to filter the query
+     * @param      boolean $distinct Set to true to force count distinct
+     * @param      ConnectionInterface $con Optional connection object
+     *
+     * @return int the number of related VpPlans objects
+     */
+    public function countVpPlanss(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collVpPlanssPartial && !$this->isNew();
+        if (null === $this->collVpPlanss || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collVpPlanss) {
+                return 0;
+            } else {
+
+                if ($partial && !$criteria) {
+                    return count($this->getVpPlanss());
+                }
+
+                $query = ChildVpPlansQuery::create(null, $criteria);
+                if ($distinct) {
+                    $query->distinct();
+                }
+
+                return $query
+                    ->filterByVpUsers($this)
+                    ->count($con);
+            }
+        } else {
+            return count($this->collVpPlanss);
+        }
+    }
+
+    /**
+     * Associate a ChildVpPlans to this object
+     * through the vp_users_plans cross reference table.
+     *
+     * @param ChildVpPlans $vpPlans
+     * @return ChildVpUsers The current object (for fluent API support)
+     */
+    public function addVpPlans(ChildVpPlans $vpPlans)
+    {
+        if ($this->collVpPlanss === null) {
+            $this->initVpPlanss();
+        }
+
+        if (!$this->getVpPlanss()->contains($vpPlans)) {
+            // only add it if the **same** object is not already associated
+            $this->collVpPlanss->push($vpPlans);
+            $this->doAddVpPlans($vpPlans);
+        }
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param ChildVpPlans $vpPlans
+     */
+    protected function doAddVpPlans(ChildVpPlans $vpPlans)
+    {
+        $vpUsersPlans = new ChildVpUsersPlans();
+
+        $vpUsersPlans->setVpPlans($vpPlans);
+
+        $vpUsersPlans->setVpUsers($this);
+
+        $this->addVpUsersPlans($vpUsersPlans);
+
+        // set the back reference to this object directly as using provided method either results
+        // in endless loop or in multiple relations
+        if (!$vpPlans->isVpUserssLoaded()) {
+            $vpPlans->initVpUserss();
+            $vpPlans->getVpUserss()->push($this);
+        } elseif (!$vpPlans->getVpUserss()->contains($this)) {
+            $vpPlans->getVpUserss()->push($this);
+        }
+
+    }
+
+    /**
+     * Remove vpPlans of this object
+     * through the vp_users_plans cross reference table.
+     *
+     * @param ChildVpPlans $vpPlans
+     * @return ChildVpUsers The current object (for fluent API support)
+     */
+    public function removeVpPlans(ChildVpPlans $vpPlans)
+    {
+        if ($this->getVpPlanss()->contains($vpPlans)) {
+            $vpUsersPlans = new ChildVpUsersPlans();
+            $vpUsersPlans->setVpPlans($vpPlans);
+            if ($vpPlans->isVpUserssLoaded()) {
+                //remove the back reference if available
+                $vpPlans->getVpUserss()->removeObject($this);
+            }
+
+            $vpUsersPlans->setVpUsers($this);
+            $this->removeVpUsersPlans(clone $vpUsersPlans);
+            $vpUsersPlans->clear();
+
+            $this->collVpPlanss->remove($this->collVpPlanss->search($vpPlans));
+
+            if (null === $this->vpPlanssScheduledForDeletion) {
+                $this->vpPlanssScheduledForDeletion = clone $this->collVpPlanss;
+                $this->vpPlanssScheduledForDeletion->clear();
+            }
+
+            $this->vpPlanssScheduledForDeletion->push($vpPlans);
+        }
+
+
+        return $this;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -1466,9 +1760,15 @@ abstract class VpUsers implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collVpPlanss) {
+                foreach ($this->collVpPlanss as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
         $this->collVpUsersPlanss = null;
+        $this->collVpPlanss = null;
     }
 
     /**

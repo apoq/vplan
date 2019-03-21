@@ -35,10 +35,9 @@
       <parameter name="Engine" value="InnoDB"/>
     </vendor>
   </table>
-  <table name="vp_users_plans" idMethod="native" phpName="VpUsersPlans" namespace="App\Models">
-    <column name="id" phpName="Id" type="BIGINT" size="15" sqlType="bigint(15) unsigned" primaryKey="true" autoIncrement="true" required="true"/>
-    <column name="user_id" phpName="UserId" type="INTEGER" sqlType="int(11) unsigned" required="true"/>
-    <column name="plan_id" phpName="PlanId" type="BIGINT" sqlType="bigint(15) unsigned" required="true"/>
+  <table name="vp_users_plans" idMethod="native" phpName="VpUsersPlans" namespace="App\Models" isCrossRef="true">
+    <column name="user_id" phpName="UserId" type="INTEGER" sqlType="int(11) unsigned" required="true" primaryKey="true"/>
+    <column name="plan_id" phpName="PlanId" type="BIGINT" sqlType="bigint(15) unsigned" required="true" primaryKey="true"/>
     <foreign-key foreignTable="vp_users" name="vp_users_plans_ibfk_1" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="user_id" foreign="id"/>
     </foreign-key>

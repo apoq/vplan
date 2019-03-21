@@ -20,11 +20,9 @@ use Propel\Runtime\Exception\PropelException;
  *
  *
  *
- * @method     ChildVpUsersPlansQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildVpUsersPlansQuery orderByUserId($order = Criteria::ASC) Order by the user_id column
  * @method     ChildVpUsersPlansQuery orderByPlanId($order = Criteria::ASC) Order by the plan_id column
  *
- * @method     ChildVpUsersPlansQuery groupById() Group by the id column
  * @method     ChildVpUsersPlansQuery groupByUserId() Group by the user_id column
  * @method     ChildVpUsersPlansQuery groupByPlanId() Group by the plan_id column
  *
@@ -61,19 +59,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildVpUsersPlans findOne(ConnectionInterface $con = null) Return the first ChildVpUsersPlans matching the query
  * @method     ChildVpUsersPlans findOneOrCreate(ConnectionInterface $con = null) Return the first ChildVpUsersPlans matching the query, or a new ChildVpUsersPlans object populated from the query conditions when no match is found
  *
- * @method     ChildVpUsersPlans findOneById(string $id) Return the first ChildVpUsersPlans filtered by the id column
  * @method     ChildVpUsersPlans findOneByUserId(int $user_id) Return the first ChildVpUsersPlans filtered by the user_id column
  * @method     ChildVpUsersPlans findOneByPlanId(string $plan_id) Return the first ChildVpUsersPlans filtered by the plan_id column *
 
  * @method     ChildVpUsersPlans requirePk($key, ConnectionInterface $con = null) Return the ChildVpUsersPlans by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildVpUsersPlans requireOne(ConnectionInterface $con = null) Return the first ChildVpUsersPlans matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildVpUsersPlans requireOneById(string $id) Return the first ChildVpUsersPlans filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildVpUsersPlans requireOneByUserId(int $user_id) Return the first ChildVpUsersPlans filtered by the user_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildVpUsersPlans requireOneByPlanId(string $plan_id) Return the first ChildVpUsersPlans filtered by the plan_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildVpUsersPlans[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildVpUsersPlans objects based on current ModelCriteria
- * @method     ChildVpUsersPlans[]|ObjectCollection findById(string $id) Return ChildVpUsersPlans objects filtered by the id column
  * @method     ChildVpUsersPlans[]|ObjectCollection findByUserId(int $user_id) Return ChildVpUsersPlans objects filtered by the user_id column
  * @method     ChildVpUsersPlans[]|ObjectCollection findByPlanId(string $plan_id) Return ChildVpUsersPlans objects filtered by the plan_id column
  * @method     ChildVpUsersPlans[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -125,10 +120,10 @@ abstract class VpUsersPlansQuery extends ModelCriteria
      * Go fast if the query is untouched.
      *
      * <code>
-     * $obj  = $c->findPk(12, $con);
+     * $obj = $c->findPk(array(12, 34), $con);
      * </code>
      *
-     * @param mixed $key Primary key to use for the query
+     * @param array[$user_id, $plan_id] $key Primary key to use for the query
      * @param ConnectionInterface $con an optional connection object
      *
      * @return ChildVpUsersPlans|array|mixed the result, formatted by the current formatter
@@ -153,7 +148,7 @@ abstract class VpUsersPlansQuery extends ModelCriteria
             return $this->findPkComplex($key, $con);
         }
 
-        if ((null !== ($obj = VpUsersPlansTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
+        if ((null !== ($obj = VpUsersPlansTableMap::getInstanceFromPool(serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]))))) {
             // the object is already in the instance pool
             return $obj;
         }
@@ -174,10 +169,11 @@ abstract class VpUsersPlansQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, user_id, plan_id FROM vp_users_plans WHERE id = :p0';
+        $sql = 'SELECT user_id, plan_id FROM vp_users_plans WHERE user_id = :p0 AND plan_id = :p1';
         try {
             $stmt = $con->prepare($sql);
-            $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
+            $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
+            $stmt->bindValue(':p1', $key[1], PDO::PARAM_INT);
             $stmt->execute();
         } catch (Exception $e) {
             Propel::log($e->getMessage(), Propel::LOG_ERR);
@@ -188,7 +184,7 @@ abstract class VpUsersPlansQuery extends ModelCriteria
             /** @var ChildVpUsersPlans $obj */
             $obj = new ChildVpUsersPlans();
             $obj->hydrate($row);
-            VpUsersPlansTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
+            VpUsersPlansTableMap::addInstanceToPool($obj, serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]));
         }
         $stmt->closeCursor();
 
@@ -217,7 +213,7 @@ abstract class VpUsersPlansQuery extends ModelCriteria
     /**
      * Find objects by primary key
      * <code>
-     * $objs = $c->findPks(array(12, 56, 832), $con);
+     * $objs = $c->findPks(array(array(12, 56), array(832, 123), array(123, 456)), $con);
      * </code>
      * @param     array $keys Primary keys to use for the query
      * @param     ConnectionInterface $con an optional connection object
@@ -247,8 +243,10 @@ abstract class VpUsersPlansQuery extends ModelCriteria
      */
     public function filterByPrimaryKey($key)
     {
+        $this->addUsingAlias(VpUsersPlansTableMap::COL_USER_ID, $key[0], Criteria::EQUAL);
+        $this->addUsingAlias(VpUsersPlansTableMap::COL_PLAN_ID, $key[1], Criteria::EQUAL);
 
-        return $this->addUsingAlias(VpUsersPlansTableMap::COL_ID, $key, Criteria::EQUAL);
+        return $this;
     }
 
     /**
@@ -260,49 +258,17 @@ abstract class VpUsersPlansQuery extends ModelCriteria
      */
     public function filterByPrimaryKeys($keys)
     {
-
-        return $this->addUsingAlias(VpUsersPlansTableMap::COL_ID, $keys, Criteria::IN);
-    }
-
-    /**
-     * Filter the query on the id column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterById(1234); // WHERE id = 1234
-     * $query->filterById(array(12, 34)); // WHERE id IN (12, 34)
-     * $query->filterById(array('min' => 12)); // WHERE id > 12
-     * </code>
-     *
-     * @param     mixed $id The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildVpUsersPlansQuery The current query, for fluid interface
-     */
-    public function filterById($id = null, $comparison = null)
-    {
-        if (is_array($id)) {
-            $useMinMax = false;
-            if (isset($id['min'])) {
-                $this->addUsingAlias(VpUsersPlansTableMap::COL_ID, $id['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($id['max'])) {
-                $this->addUsingAlias(VpUsersPlansTableMap::COL_ID, $id['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
+        if (empty($keys)) {
+            return $this->add(null, '1<>1', Criteria::CUSTOM);
+        }
+        foreach ($keys as $key) {
+            $cton0 = $this->getNewCriterion(VpUsersPlansTableMap::COL_USER_ID, $key[0], Criteria::EQUAL);
+            $cton1 = $this->getNewCriterion(VpUsersPlansTableMap::COL_PLAN_ID, $key[1], Criteria::EQUAL);
+            $cton0->addAnd($cton1);
+            $this->addOr($cton0);
         }
 
-        return $this->addUsingAlias(VpUsersPlansTableMap::COL_ID, $id, $comparison);
+        return $this;
     }
 
     /**
@@ -555,7 +521,9 @@ abstract class VpUsersPlansQuery extends ModelCriteria
     public function prune($vpUsersPlans = null)
     {
         if ($vpUsersPlans) {
-            $this->addUsingAlias(VpUsersPlansTableMap::COL_ID, $vpUsersPlans->getId(), Criteria::NOT_EQUAL);
+            $this->addCond('pruneCond0', $this->getAliasedColName(VpUsersPlansTableMap::COL_USER_ID), $vpUsersPlans->getUserId(), Criteria::NOT_EQUAL);
+            $this->addCond('pruneCond1', $this->getAliasedColName(VpUsersPlansTableMap::COL_PLAN_ID), $vpUsersPlans->getPlanId(), Criteria::NOT_EQUAL);
+            $this->combine(array('pruneCond0', 'pruneCond1'), Criteria::LOGICAL_OR);
         }
 
         return $this;

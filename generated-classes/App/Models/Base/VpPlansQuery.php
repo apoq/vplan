@@ -472,6 +472,23 @@ abstract class VpPlansQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query by a related VpUsers object
+     * using the vp_users_plans table as cross reference
+     *
+     * @param VpUsers $vpUsers the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildVpPlansQuery The current query, for fluid interface
+     */
+    public function filterByVpUsers($vpUsers, $comparison = Criteria::EQUAL)
+    {
+        return $this
+            ->useVpUsersPlansQuery()
+            ->filterByVpUsers($vpUsers, $comparison)
+            ->endUse();
+    }
+
+    /**
      * Exclude object from result
      *
      * @param   ChildVpPlans $vpPlans Object to remove from the list of results

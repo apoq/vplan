@@ -2,8 +2,8 @@
 
 namespace App\Controllers\Api;
 
-use App\Models\VpUsers;
-use App\Models\VpUsersQuery;
+use App\Models\VpPlans;
+use App\Models\VpPlansQuery;
 use App\Controllers\BaseController;
 use System\Request;
 
@@ -14,73 +14,67 @@ use System\Request;
 class PlanController extends BaseController
 {
     /**
-     * GET /api/v1/users
+     * GET /api/v1/plans
      */
     public function index()
     {
-        $users = VpUsersQuery::create()->find();
+        $plans = VpPlansQuery::create()->find();
 
-        $this->renderJson($users->toArray());
-    }
-
-    public function view($id)
-    {
-        $user = VpUsersQuery::create()->findPk($id);
-
-        if (!isset($user)) {
-            return $this->respondNotFound();
-        }
-
-        $this->renderJson($user->toArray());
+        $this->renderJson($plans->toArray());
     }
 
     /**
-     * POST /api/v1/users
+     * GET /api/v1/plan/{id}
+     */
+    public function view($id)
+    {
+        $plan = VpPlansQuery::create()->findPk($id);
+
+        if (!isset($plan)) {
+            return $this->respondNotFound();
+        }
+
+        $planUsers     = $plan->getVpUserss();
+        $plan          = $plan->toArray();
+        $plan['Users'] = $planUsers->toArray();
+
+        $this->renderJson($plan);
+    }
+
+    /**
+     * POST /api/v1/plans
      */
     public function create()
     {
-        $user = new VpUsers();
+        $plan = new VpPlans();
 
         /** @var Request $request */
         $request    = app('request');
         $createData = $request->body;
 
-        if (strlen($createData['email']) == 0) {
+        if (strlen($createData['title']) == 0) {
             return $this->respondUnprocessableEntity();
         }
 
-        if (strlen($createData['first_name']) == 0) {
-            return $this->respondUnprocessableEntity();
-        }
-
-        if (strlen($createData['last_name']) == 0) {
-            return $this->respondUnprocessableEntity();
-        }
-
-        $user->setEmail($createData['email']);
-        $user->setFirstName($createData['first_name']);
-        $user->setLastName($createData['last_name']);
+        $plan->setTitle($createData['title']);
 
         try {
-            $user->save();
+            $plan->save();
         } catch (\Exception $e) {
             return $this->respondError();
         }
 
-        return $this->respondCreated($user->toArray());
+        return $this->respondCreated($plan->toArray());
     }
 
     /**
-     * PUT /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
+     * PUT /api/v1/plans/{id}
      */
     public function update($id)
     {
-        $user = VpUsersQuery::create()->findPk($id);
+        $plan = VpPlansQuery::create()->findPk($id);
 
-        if (!isset($user)) {
+        if (!isset($plan)) {
             return $this->respondNotFound();
         }
 
@@ -88,20 +82,12 @@ class PlanController extends BaseController
         $request    = app('request');
         $updateData = $request->body;
 
-        if (strlen($updateData['email']) != 0) {
-            $user->setEmail($updateData['email']);
-        }
-
-        if (strlen($updateData['first_name']) != 0) {
-            $user->setFirstName($updateData['first_name']);
-        }
-
-        if (strlen($updateData['last_name']) != 0) {
-            $user->setLastName($updateData['last_name']);
+        if (strlen($updateData['title']) != 0) {
+            $plan->setTitle($updateData['title']);
         }
 
         try {
-            $user->save();
+            $plan->save();
         } catch (\Exception $e) {
             return $this->respondError();
         }
@@ -110,21 +96,18 @@ class PlanController extends BaseController
     }
 
     /**
-     * DELETE /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
+     * DELETE /api/v1/plans/{id}
      */
     public function delete($id)
     {
-        $user = VpUsersQuery::create()->findPk($id);
+        $plan = VpPlansQuery::create()->findPk($id);
 
-        if (!isset($user)) {
+        if (!isset($plan)) {
             return $this->respondNotFound();
         }
 
         try {
-            $user->delete();
+            $plan->delete();
         } catch (\Exception $e) {
             return $this->respondError();
         }

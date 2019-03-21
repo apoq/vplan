@@ -2,8 +2,8 @@
 
 namespace App\Controllers\Api;
 
-use App\Models\VpUsers;
-use App\Models\VpUsersQuery;
+use App\Models\VpDays;
+use App\Models\VpDaysQuery;
 use App\Controllers\BaseController;
 use System\Request;
 
@@ -14,73 +14,73 @@ use System\Request;
 class DayController extends BaseController
 {
     /**
-     * GET /api/v1/users
+     * GET /api/v1/days
      */
     public function index()
     {
-        $users = VpUsersQuery::create()->find();
+        $days = VpDaysQuery::create()->find();
 
-        $this->renderJson($users->toArray());
-    }
-
-    public function view($id)
-    {
-        $user = VpUsersQuery::create()->findPk($id);
-
-        if (!isset($user)) {
-            return $this->respondNotFound();
-        }
-
-        $this->renderJson($user->toArray());
+        $this->renderJson($days->toArray());
     }
 
     /**
-     * POST /api/v1/users
+     * GET /api/v1/days/{id}
+     */
+    public function view($id)
+    {
+        $day = VpDaysQuery::create()->findPk($id);
+
+        if (!isset($day)) {
+            return $this->respondNotFound();
+        }
+
+        $this->renderJson($day->toArray());
+    }
+
+    /**
+     * POST /api/v1/days
      */
     public function create()
     {
-        $user = new VpUsers();
+        $day = new VpDays();
 
         /** @var Request $request */
         $request    = app('request');
         $createData = $request->body;
 
-        if (strlen($createData['email']) == 0) {
+        if (strlen($createData['title']) == 0) {
             return $this->respondUnprocessableEntity();
         }
 
-        if (strlen($createData['first_name']) == 0) {
+        if (strlen($createData['plan_id']) == 0) {
             return $this->respondUnprocessableEntity();
         }
 
-        if (strlen($createData['last_name']) == 0) {
+        $plan = VpDaysQuery::create()->findPk($createData['plan_id']);
+        if (!isset($plan)) {
             return $this->respondUnprocessableEntity();
         }
 
-        $user->setEmail($createData['email']);
-        $user->setFirstName($createData['first_name']);
-        $user->setLastName($createData['last_name']);
+        $day->setTitle($createData['title']);
+        $day->setPlanId($plan->getId());
 
         try {
-            $user->save();
+            $day->save();
         } catch (\Exception $e) {
             return $this->respondError();
         }
 
-        return $this->respondCreated($user->toArray());
+        return $this->respondCreated($day->toArray());
     }
 
     /**
-     * PUT /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
+     * PUT /api/v1/days/{id}
      */
     public function update($id)
     {
-        $user = VpUsersQuery::create()->findPk($id);
+        $day = VpDaysQuery::create()->findPk($id);
 
-        if (!isset($user)) {
+        if (!isset($day)) {
             return $this->respondNotFound();
         }
 
@@ -88,20 +88,12 @@ class DayController extends BaseController
         $request    = app('request');
         $updateData = $request->body;
 
-        if (strlen($updateData['email']) != 0) {
-            $user->setEmail($updateData['email']);
-        }
-
-        if (strlen($updateData['first_name']) != 0) {
-            $user->setFirstName($updateData['first_name']);
-        }
-
-        if (strlen($updateData['last_name']) != 0) {
-            $user->setLastName($updateData['last_name']);
+        if (strlen($updateData['title']) != 0) {
+            $day->setTitle($updateData['title']);
         }
 
         try {
-            $user->save();
+            $day->save();
         } catch (\Exception $e) {
             return $this->respondError();
         }
@@ -110,21 +102,18 @@ class DayController extends BaseController
     }
 
     /**
-     * DELETE /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
+     * DELETE /api/v1/days/{id}
      */
     public function delete($id)
     {
-        $user = VpUsersQuery::create()->findPk($id);
+        $day = VpDaysQuery::create()->findPk($id);
 
-        if (!isset($user)) {
+        if (!isset($day)) {
             return $this->respondNotFound();
         }
 
         try {
-            $user->delete();
+            $day->delete();
         } catch (\Exception $e) {
             return $this->respondError();
         }

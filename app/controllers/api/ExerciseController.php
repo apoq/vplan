@@ -2,8 +2,9 @@
 
 namespace App\Controllers\Api;
 
-use App\Models\VpUsers;
-use App\Models\VpUsersQuery;
+use App\Models\VpDaysQuery;
+use App\Models\VpExercises;
+use App\Models\VpExercisesQuery;
 use App\Controllers\BaseController;
 use System\Request;
 
@@ -14,73 +15,73 @@ use System\Request;
 class ExerciseController extends BaseController
 {
     /**
-     * GET /api/v1/users
+     * GET /api/v1/exercises
      */
     public function index()
     {
-        $users = VpUsersQuery::create()->find();
+        $exercises = VpExercisesQuery::create()->find();
 
-        $this->renderJson($users->toArray());
-    }
-
-    public function view($id)
-    {
-        $user = VpUsersQuery::create()->findPk($id);
-
-        if (!isset($user)) {
-            return $this->respondNotFound();
-        }
-
-        $this->renderJson($user->toArray());
+        $this->renderJson($exercises->toArray());
     }
 
     /**
-     * POST /api/v1/users
+     *  GET /api/v1/exercises/{id}
+     */
+    public function view($id)
+    {
+        $exercise = VpExercisesQuery::create()->findPk($id);
+
+        if (!isset($exercise)) {
+            return $this->respondNotFound();
+        }
+
+        $this->renderJson($exercise->toArray());
+    }
+
+    /**
+     * POST /api/v1/exercises
      */
     public function create()
     {
-        $user = new VpUsers();
+        $exercise = new VpExercises();
 
         /** @var Request $request */
         $request    = app('request');
         $createData = $request->body;
 
-        if (strlen($createData['email']) == 0) {
+        if (strlen($createData['title']) == 0) {
             return $this->respondUnprocessableEntity();
         }
 
-        if (strlen($createData['first_name']) == 0) {
+        if (strlen($createData['day_id']) == 0) {
             return $this->respondUnprocessableEntity();
         }
 
-        if (strlen($createData['last_name']) == 0) {
+        $day = VpDaysQuery::create()->findPk($createData['day_id']);
+        if (!isset($day)) {
             return $this->respondUnprocessableEntity();
         }
 
-        $user->setEmail($createData['email']);
-        $user->setFirstName($createData['first_name']);
-        $user->setLastName($createData['last_name']);
+        $exercise->setTitle($createData['title']);
+        $exercise->setDayId($day->getId());
 
         try {
-            $user->save();
+            $exercise->save();
         } catch (\Exception $e) {
             return $this->respondError();
         }
 
-        return $this->respondCreated($user->toArray());
+        return $this->respondCreated($exercise->toArray());
     }
 
     /**
-     * PUT /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
+     * PUT /api/v1/exercises/{id}
      */
     public function update($id)
     {
-        $user = VpUsersQuery::create()->findPk($id);
+        $exercise = VpExercisesQuery::create()->findPk($id);
 
-        if (!isset($user)) {
+        if (!isset($exercise)) {
             return $this->respondNotFound();
         }
 
@@ -88,20 +89,12 @@ class ExerciseController extends BaseController
         $request    = app('request');
         $updateData = $request->body;
 
-        if (strlen($updateData['email']) != 0) {
-            $user->setEmail($updateData['email']);
-        }
-
-        if (strlen($updateData['first_name']) != 0) {
-            $user->setFirstName($updateData['first_name']);
-        }
-
-        if (strlen($updateData['last_name']) != 0) {
-            $user->setLastName($updateData['last_name']);
+        if (strlen($updateData['title']) != 0) {
+            $exercise->setTitle($updateData['title']);
         }
 
         try {
-            $user->save();
+            $exercise->save();
         } catch (\Exception $e) {
             return $this->respondError();
         }
@@ -110,21 +103,18 @@ class ExerciseController extends BaseController
     }
 
     /**
-     * DELETE /api/v1/users/{id}
-     *
-     * @param integer $id
-     * @return bool
+     * DELETE /api/v1/exercises/{id}
      */
     public function delete($id)
     {
-        $user = VpUsersQuery::create()->findPk($id);
+        $exercise = VpExercisesQuery::create()->findPk($id);
 
-        if (!isset($user)) {
+        if (!isset($exercise)) {
             return $this->respondNotFound();
         }
 
         try {
-            $user->delete();
+            $exercise->delete();
         } catch (\Exception $e) {
             return $this->respondError();
         }
