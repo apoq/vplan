@@ -5,16 +5,17 @@
 
 define('DS', DIRECTORY_SEPARATOR, true);
 
-$pfx = __DIR__;
-$propelBinPath = $pfx . '/vendor/bin/propel';
+$pfx           = __DIR__;
+$propelBinPath = $pfx . DS . 'vendor' . DS . 'bin' . DS . 'propel';
 
 /**
  * Recursive chmod
  *
- * @param string  $path
+ * @param string $path
  * @param integer $perms
  */
-function chmod_r($path, $perms = 0777) {
+function chmod_r($path, $perms = 0777)
+{
     $dir = new DirectoryIterator($path);
     foreach ($dir as $item) {
         chmod($item->getPathname(), $perms);
@@ -27,7 +28,7 @@ function chmod_r($path, $perms = 0777) {
 /**
  * Run composer install
  */
-function vp_runcomposer()
+function vp_run_composer()
 {
     echo '-- Running composer install' . PHP_EOL;
     exec('php composer.phar install');
@@ -79,7 +80,7 @@ function vp_set_permissions($perms = 0777)
     echo '-- Setting up permissions' . PHP_EOL;
 
     $pathes = [
-        DS.'cache'.DS.'views',
+        DS . 'cache' . DS . 'views',
     ];
 
     foreach ($pathes as $path) {
@@ -92,9 +93,10 @@ function vp_set_permissions($perms = 0777)
     }
 }
 
-vp_runcomposer();
+vp_run_composer();
 vp_config();
 vp_migrate();
 vp_build_models();
-vp_runcomposer();
+vp_run_composer();
 vp_set_permissions();
+echo "[DONE]" . PHP_EOL;
