@@ -1,0 +1,15 @@
+<form data-user-id="{{ user.Id }}">
+    <div class="form-group">
+        <label for="inpEmail">Email address</label>
+        <input type="email" class="form-control" id="inpEmail" placeholder="Enter email" value="{{ user.Email }}">
+    </div>
+    <div class="form-group">
+        <label for="inpFirstName">First name</label>
+        <input type="text" class="form-control" id="inpFirstName" placeholder="Enter first name" value="{{ user.FirstName }}">
+    </div>
+    <div class="form-group">
+        <label for="inpLastName">Last name</label>
+        <input type="text" class="form-control" id="inpLastName" placeholder="Enter last name" value="{{ user.LastName }}">
+    </div>
+    <button type="button" class="btn btn-primary save-user" data-toggle="collapse" data-target="#multi-collapse-{{ user.Id }}">Save</button>
+</form>

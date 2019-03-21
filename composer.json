@@ -1,0 +1,22 @@
+{
+  "name": "apoq/vplan",
+  "authors": [
+    {
+      "name": "Apti U",
+      "email": "apoq@protonmail.ch"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0",
+    "nezamy/route": "1.2.4",
+    "propel/propel": "~2.0@dev",
+    "twig/twig": "^2.0",
+    "owasp/csrf-protector-php": "dev-master"
+  },
+  "autoload": {
+    "classmap": [
+      "app/",
+      "generated-classes/"
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<database name="default" defaultIdMethod="native" defaultPhpNamingMethod="underscore">
+  <table name="vp_days" idMethod="native" phpName="VpDays" namespace="App\Models">
+    <column name="id" phpName="Id" type="BIGINT" size="15" sqlType="bigint(15) unsigned" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="title" phpName="Title" type="VARCHAR" size="255" required="true"/>
+    <column name="plan_id" phpName="PlanId" type="BIGINT" size="15" sqlType="bigint(15) unsigned" required="true"/>
+    <foreign-key foreignTable="vp_plans" name="vp_days_ibfk_1" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="plan_id" foreign="id"/>
+    </foreign-key>
+    <index name="plan_id">
+      <index-column name="plan_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+  <table name="vp_exercises" idMethod="native" phpName="VpExercises" namespace="App\Models">
+    <column name="id" phpName="Id" type="BIGINT" size="15" sqlType="bigint(15) unsigned" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="title" phpName="Title" type="VARCHAR" size="255" required="true"/>
+    <column name="day_id" phpName="DayId" type="BIGINT" size="15" sqlType="bigint(15) unsigned" required="true"/>
+    <foreign-key foreignTable="vp_days" name="vp_exercises_ibfk_1" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="day_id" foreign="id"/>
+    </foreign-key>
+    <index name="day_id">
+      <index-column name="day_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+  <table name="vp_plans" idMethod="native" phpName="VpPlans" namespace="App\Models">
+    <column name="id" phpName="Id" type="BIGINT" size="15" sqlType="bigint(15) unsigned" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="title" phpName="Title" type="VARCHAR" size="255" required="true"/>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+  <table name="vp_users_plans" idMethod="native" phpName="VpUsersPlans" namespace="App\Models">
+    <column name="id" phpName="Id" type="BIGINT" size="15" sqlType="bigint(15) unsigned" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="user_id" phpName="UserId" type="INTEGER" sqlType="int(11) unsigned" required="true"/>
+    <column name="plan_id" phpName="PlanId" type="BIGINT" sqlType="bigint(15) unsigned" required="true"/>
+    <foreign-key foreignTable="vp_users" name="vp_users_plans_ibfk_1" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="user_id" foreign="id"/>
+    </foreign-key>
+    <foreign-key foreignTable="vp_plans" name="vp_users_plans_ibfk_2" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="plan_id" foreign="id"/>
+    </foreign-key>
+    <index name="user_id">
+      <index-column name="user_id"/>
+    </index>
+    <index name="plan_id">
+      <index-column name="plan_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+  <table name="vp_users" idMethod="native" phpName="VpUsers" namespace="App\Models">
+    <column name="id" phpName="Id" type="INTEGER" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="first_name" phpName="FirstName" type="VARCHAR" size="32" required="true"/>
+    <column name="last_name" phpName="LastName" type="VARCHAR" size="32" required="true"/>
+    <column name="email" phpName="Email" type="VARCHAR" size="64" required="true"/>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+</database>

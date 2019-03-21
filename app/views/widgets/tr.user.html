@@ -1,0 +1,26 @@
+<tr>
+    <th scope="row">{{ user.Id }}</th>
+    <td class="fname">{{ user.FirstName }}</td>
+    <td>
+        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+            <button class="btn btn-info btn-lg edit-user"
+                    data-toggle="collapse"
+                    data-target="#multi-collapse-{{ user.Id }}"
+                    role="button">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-lg delete-user" data-id="{{ user.Id }}">
+                <i class="fas fa-times-circle"></i>
+            </button>
+        </div>
+    </td>
+</tr>
+<tr>
+    <td colspan="3">
+        <div class="collapse multi-collapse" id="multi-collapse-{{ user.Id }}">
+            <div class="card card-body bg-light">
+                {{ include('base/user_form.html') }}
+            </div>
+        </div>
+    </td>
+</tr>
