@@ -1,5 +1,13 @@
-# API Client Example
+# VPlan App
 ======================
+
+## Info
+
+This is a sample app built with custom made framework, which contains:
+
+ * nezamy/route router
+ * twig templating engine
+ * propel orm
 
 ## Setup
 
@@ -18,12 +26,12 @@ $ cd vplan/
 $ nano/vim propel.yml
 ```
 
-3) Build project
+4) Build project
 ```
 $ php setup.php
 ```
 
-4) Run
+5) Run
 ```
 $ cd public/ && php -S 0.0.0.0:8080
 ```
