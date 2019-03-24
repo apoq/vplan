@@ -3,7 +3,7 @@
 
 ## Info
 
-This is a sample app built with custom made framework, which contains:
+This is a sample app built with custom made framework (fresh made), which contains:
 
  * nezamy/route router
  * twig templating engine
