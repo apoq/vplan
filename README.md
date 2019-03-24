@@ -35,3 +35,11 @@ $ php setup.php
 ```
 $ cd public/ && php -S 0.0.0.0:8080
 ```
+
+## Todo
+
+* Finish plan creation
+
+* Add CSRF form protection (middleware)
+
+* Add CORS (middleware)
