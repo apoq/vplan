@@ -5,6 +5,9 @@ namespace App\Controllers\Api;
 use App\Models\VpPlans;
 use App\Models\VpPlansQuery;
 use App\Controllers\BaseController;
+use App\Models\VpUsersPlans;
+use App\Models\VpUsersPlansQuery;
+use App\Models\VpUsersQuery;
 use System\Request;
 
 /**
@@ -108,6 +111,71 @@ class PlanController extends BaseController
 
         try {
             $plan->delete();
+        } catch (\Exception $e) {
+            return $this->respondError();
+        }
+
+        return $this->respondNoContent();
+    }
+
+    /**
+     * POST /api/v1/plans/{id}/users
+     */
+    public function addPlanUser($id)
+    {
+        $plan     = VpPlansQuery::create()->findPk($id);
+        $planUser = new VpUsersPlans();
+
+        if (!isset($plan)) {
+            return $this->respondNotFound();
+        }
+
+        /** @var Request $request */
+        $request = app('request');
+        $data    = $request->body;
+
+        if (!isset($data['user_id'])) {
+            return $this->respondUnprocessableEntity();
+        }
+        $userId = $data['user_id'];
+
+        $user = VpUsersQuery::create()->findPk($userId);
+        if (!isset($user)) {
+            return $this->respondUnprocessableEntity();
+        }
+
+        $planUser->setPlanId($plan->getId());
+        $planUser->setUserId($user->getId());
+
+        try {
+            $planUser->save();
+        } catch (\Exception $e) {
+            return $this->respondError();
+        }
+
+        return $this->respondCreated(['plan_id' => $planUser->getPlanId(), 'user_id' => $planUser->getUserId()]);
+    }
+
+    /**
+     * DELETE /api/v1/plans/{id}/users/{$userId}
+     */
+    public function deletePlanUser($id, $userId)
+    {
+        $plan = VpPlansQuery::create()->findPk($id);
+
+        if (!isset($plan)) {
+            return $this->respondNotFound();
+        }
+
+        $planUser = VpUsersPlansQuery::create()->filterByPlanId($plan->getId())
+                                     ->filterByUserId($userId)->findOne();
+
+        if (!isset($planUser)) {
+            return $this->respondNotFound();
+        }
+
+        try {
+            $planUser->delete();
         } catch (\Exception $e) {
             return $this->respondError();
         }

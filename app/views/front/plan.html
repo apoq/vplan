@@ -1,0 +1,96 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 text-center">
+        <h1 id="pagetitle" class="mt-5">{{ plan.Title }}</h1>
+    </div>
+    <div class="col-lg-12">
+        <form id="planForm" data-id="{{ plan.Id }}">
+            <div class="form-group">
+                <label for="inpPlanTitle">Plan Title</label>
+                <input type="text" class="form-control" id="inpPlanTitle" placeholder="Enter title"
+                       value="{{ plan.Title }}">
+            </div>
+            <div class="form-group">
+                <label>Plan Users</label>
+                <ul class="list-group">
+                    {% for user in users %}
+                    <li data-user-id="{{ user.Id }}"
+                        class="list-group-item list-group-item-action {% if user.active %} active {% endif %}">
+                        {{ user.FirstName }} {{ user.LastName }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="form-group">
+                <label>Plan Days</label>
+                <a href="#" class="btn btn-md btn-info">Add day <i class="fas fa-plus"></i></a>
+                <br/><br/>
+                {% for day in plan.days %}
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body">
+                        <button type="button" class="ml-2 mb-1 close" data-dismiss="card" aria-label="Close">
+                            <span style="color: black">x</span>
+                        </button>
+                        <h5 class="card-title">{{ day.Title }}</h5>
+                        <a href="#" class="btn btn-sm btn-info">Add exercise <i class="fas fa-plus"></i></a>
+                        {% for exercise in day.exercises %}
+                        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                            <a href="#" class="btn btn-lg btn-info">{{ exercise.Title }}</a>
+                            <a href="#" class="btn btn-lg btn-danger remove-plan" data-id="{{ plan.Id }}"><i
+                                    class="fas fa-times-circle"></i></a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn btn-primary save-plan">Save</button>
+        </form>
+    </div>
+</div>
+<br/>
+{% endblock %}
+
+{% block footer %}
+<script>
+    $(document).ready(function () {
+        var planId = $('#planForm').attr('data-id');
+
+        $('.list-group-item').on('click', function () {
+            var root = $(this);
+            var userId = root.attr('data-user-id');
+
+            if (root.hasClass('active')) {
+                root.removeClass('active')
+                $.ajax({
+                    url: '/api/v1/plans/' + planId + '/users/' + userId,
+                    method: 'delete'
+                });
+            } else {
+                root.addClass('active');
+                $.ajax({
+                    url: '/api/v1/plans/' + planId + '/users',
+                    method: 'post',
+                    data: {user_id: userId}
+                });
+            }
+        });
+
+        $('input#inpPlanTitle').on('focusout', function () {
+            var root = $(this);
+            var title = root.val();
+
+            $.ajax({
+                url: '/api/v1/plans/' + planId,
+                method: 'put',
+                data: {title: title},
+                contentType: "application/x-www-form-urlencoded"
+            }).done(function () {
+                $('#pagetitle').text(title);
+            });
+        });
+    });
+</script>
+{% endblock %}
